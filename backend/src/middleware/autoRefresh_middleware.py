@@ -15,18 +15,21 @@ class AutoRefreshSessionMiddleWare(BaseHTTPMiddleware):
 
         if access_token:
             try:
-                payload = jwt.decode(access_token, settings.SECRET)
-                username = payload.get("username")
-                if username:
-                    new_token = self.util.create_access_token({"username": username})
-                    response.set_cookie(
-                        "access_token",
-                        new_token,
-                        httponly=True,
-                        secure=True,
-                        samesite="lax",
-                        max_age=settings.TOKEN_EXPIRY_TIME * 60,
-                    )
+                if response.body == {"message": "Logged out successfully"}:
+                    pass
+                else:
+                    payload = jwt.decode(access_token, settings.SECRET)
+                    username = payload.get("username")
+                    if username:
+                        new_token = self.util.create_access_token({"username": username})
+                        response.set_cookie(
+                            "access_token",
+                            new_token,
+                            httponly=True,
+                            secure=True,
+                            samesite="lax",
+                            max_age=settings.TOKEN_EXPIRY_TIME * 60,
+                        )
             except Exception:
                 pass
 

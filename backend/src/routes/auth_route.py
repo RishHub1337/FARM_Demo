@@ -54,20 +54,13 @@ class Authentication:
 
     @staticmethod
     @router.get("/logout")
-    async def revoke_token(request: Request):
+    async def revoke_token(request: Request, response: Response):
         access_token = request.cookies.get("access_token")
         if not access_token:
             pass
         else:
             await add_jti_to_blocklist(access_token)
-            
-            return JSONResponse(
-                content={
-                    "message": "Logged out successfully"
-                },
-                status_code=status.HTTP_200_OK
-            )
 
+            response.delete_cookie("access_token")
 
-
-
+            return JSONResponse(content={"message": "Logged out successfully"}, status_code=status.HTTP_200_OK)
