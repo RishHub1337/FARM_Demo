@@ -1,0 +1,84 @@
+import { useRef, useEffect } from "react";
+import { animate, spring, cubicBezier } from "animejs";
+import { useNavigate } from "react-router-dom";
+
+export default function OTPInputs() {
+  const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+  const navigator = useNavigate();
+
+  const focusRef = useRef(null);
+  const inputRefs = useRef([]);
+
+  useEffect(() => {
+    inputRefs.current[0]?.focus();
+  }, []);
+
+  useEffect(() => {
+    animate(".card", {
+      scale: 1.15,
+      duration: 150,
+      ease: cubicBezier(0.7, 0.1, 0.5, 0.9),
+    });
+  }, []);
+
+  const handleChange = async (e, index) => {
+    const value = e.target.value;
+
+    if (isNaN(Number(value))) {
+      // reject non-numeric input
+      e.target.value = "";
+      return;
+    }
+
+    // Move to next input when a digit is typed
+    if (value && index < 5) {
+      inputRefs.current[index + 1].focus();
+    }
+
+    // Move to previous input on backspace
+    if (!value && index > 0) {
+      inputRefs.current[index - 1].focus();
+    }
+    if (value !== "" && index === 5) {
+      await sleep(100);
+      navigator("/dashboard");
+    }
+  };
+
+  return (
+    <div>
+      <div className="flex h-[calc(100vh-8vh)] w-auto justify-center items-center ">
+        <div className="relative card flex justify-center h-[44rem] w-[32rem] items-center rounded-2xl backdrop-blur-md backdrop-opacity-88">
+          <div className="absolute flex justify-center items-center top-0 left-0 w-full h-[20rem]">
+            <span className="flex justify-center text-emerald-100 text-3xl font-light">
+              Email Verification
+            </span>
+          </div>
+          <div className="flex flex-col justify-center h-full">
+            <div className="flex items-center justify-center">
+              <form className="flex flex-col gap-4">
+                <div className="flex mb-2 space-x-2 justify-center gap-4">
+                  {[0, 1, 2, 3, 4, 5].map((i) => (
+                    <input
+                      key={i}
+                      type="text"
+                      maxLength={1}
+                      ref={(el) => (inputRefs.current[i] = el)}
+                      onChange={(e) => handleChange(e, i)}
+                      className="border text-center !p-3  h-12 w-12 text-[1rem] font-extralight rounded-none focus:outline-none focus:ring-0 text-white"
+                    />
+                  ))}
+                </div>
+                <div>
+                  <p className="flex justify-center mt-2 text-md text-gray-500 dark:text-gray-400 font-extralight">
+                    Please enter the 6 digit code we sent via email
+                  </p>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
