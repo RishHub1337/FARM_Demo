@@ -1,10 +1,35 @@
-import { useRef, useEffect } from "react";
+import { useRef, useEffect, useState } from "react";
 import { animate, spring, cubicBezier } from "animejs";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation, Navigate } from "react-router-dom";
+import ApiManager from "../../apiManager/ApiManager.js";
+
+const InvalidOtp = () => {
+  return (
+    <p className="flex justify-center mt-2 text-md text-red-700 font-extralight">
+      Invalid OTP
+    </p>
+  );
+};
 
 export default function OTPInputs() {
+  const [otp, setOtp] = useState("");
+  const [invalidOtp, setInvalidOtp] = useState(false);
+
+  const location = useLocation();
+
+  if (!location.state?.allowed) {
+    return <Navigate to={"/"} />;
+  }
   const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
   const navigator = useNavigate();
+
+  useEffect(() => {
+    const timer = async () => {
+      await sleep(2000);
+      setInvalidOtp(false);
+    }
+    timer();
+  }, [invalidOtp]);
 
   const focusRef = useRef(null);
   const inputRefs = useRef([]);
@@ -25,29 +50,46 @@ export default function OTPInputs() {
     const value = e.target.value;
 
     if (isNaN(Number(value))) {
-      // reject non-numeric input
       e.target.value = "";
       return;
     }
 
-    // Move to next input when a digit is typed
+    // Build OTP manually
+    const newOtp =
+      index === 0 ? value : otp.slice(0, index) + value + otp.slice(index + 1);
+
+    setOtp(newOtp);
+
+    // Auto move
     if (value && index < 5) {
       inputRefs.current[index + 1].focus();
     }
 
-    // Move to previous input on backspace
+    // Backspace move
     if (!value && index > 0) {
       inputRefs.current[index - 1].focus();
     }
-    if (value !== "" && index === 5) {
-      await sleep(100);
-      navigator("/dashboard");
+
+    // When complete
+    if (index === 5 && value !== "") {
+      const apiManager = new ApiManager();
+      const response = await apiManager.verify_user(
+        Number(newOtp),
+        location.state.email
+      );
+
+      if (response.status === 201) {
+        await sleep(100);
+        navigator("/dashboard", {state: {allowed: true}});
+      } else if (response.status === 406) {
+        setInvalidOtp(true);
+      }
     }
   };
 
   return (
     <div>
-      <div className="flex h-[calc(100vh-8vh)] w-auto justify-center items-center ">
+      <div className="flex min-h-screen w-auto justify-center items-center ">
         <div className="relative card flex justify-center h-[44rem] w-[32rem] items-center rounded-2xl backdrop-blur-md backdrop-opacity-88">
           <div className="absolute flex justify-center items-center top-0 left-0 w-full h-[20rem]">
             <span className="flex justify-center text-emerald-100 text-3xl font-light">
@@ -64,7 +106,10 @@ export default function OTPInputs() {
                       type="text"
                       maxLength={1}
                       ref={(el) => (inputRefs.current[i] = el)}
-                      onChange={(e) => handleChange(e, i)}
+                      onChange={(e) => {
+                        setOtp(String(e.target.value));
+                        handleChange(e, i);
+                      }}
                       className="border text-center !p-3  h-12 w-12 text-[1rem] font-extralight rounded-none focus:outline-none focus:ring-0 text-white"
                     />
                   ))}
@@ -73,6 +118,7 @@ export default function OTPInputs() {
                   <p className="flex justify-center mt-2 text-md text-gray-500 dark:text-gray-400 font-extralight">
                     Please enter the 6 digit code we sent via email
                   </p>
+                  {invalidOtp === true ? <InvalidOtp /> : ""}
                 </div>
               </form>
             </div>

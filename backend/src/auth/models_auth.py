@@ -3,7 +3,6 @@ from typing import Optional
 from pydantic import BaseModel, EmailStr, Field, field_validator
 import uuid
 
-
 class UserAuthBase(BaseModel):
 
     @field_validator("email", mode="before", check_fields=False)
@@ -29,3 +28,10 @@ class UserAccount(UserAuthBase):
 class UserLogin(UserAuthBase):
     username: str
     password: str
+
+class OtpVerificationModel(UserAuthBase):
+    otp: int
+    email: EmailStr
+
+class ResendOtpModel(UserAuthBase):
+    email: EmailStr

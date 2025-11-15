@@ -15,6 +15,10 @@ class Settings(BaseSettings):
     REDIS_USERNAME: str 
     REDIS_PASSWORD: str 
 
+    SMTP_SERVER: str
+    SMTP_PORT: int
+    SMTP_PASSWORD: str
+
     class Config:
         env_file = ".env"
         extra = "ignore"

@@ -1,10 +1,9 @@
 from fastapi import Request, Response, HTTPException
 from starlette.middleware.base import BaseHTTPMiddleware
 
-from backend import settings
+from src import settings
 from ..auth.utils_auth import AuthUtils
 from jose import jwt
-
 
 class AutoRefreshSessionMiddleWare(BaseHTTPMiddleware):
     util = AuthUtils()
