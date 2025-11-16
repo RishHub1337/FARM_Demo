@@ -5,7 +5,7 @@ import { Routes, Route } from "react-router-dom";
 import SignUp from "./components/pages/SignUp";
 import SignIn from "./components/pages/SignIn";
 import EmailVerification from "./components/pages/EmailVerification";
-import Dashboard from "./components/pages/Dashboard";
+import Dashboard from "./components/pages/dashboard/Dashboard";
 import AuthLayout from "./components/layout/AuthLayout";
 
 function App() {
