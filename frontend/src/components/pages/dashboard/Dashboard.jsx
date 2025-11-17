@@ -81,9 +81,9 @@ const Dashboard = () => {
   return (
     <div className="bg-none">
       <div className="text-white h-[8vh] flex justify-center items-center text-3xl">
-        <marquee behavior="" direction="">
-          This is the Primary Dashboard for Farm Demo Application
-        </marquee>
+        {/* <marquee behavior="" direction=""> */}
+          Farm Demo
+        {/* </marquee> */}
       </div>
       <div className="grid sm:grid-cols-12 gap-4 h-[calc(100vh-16vh)] opacity-90">
         <div

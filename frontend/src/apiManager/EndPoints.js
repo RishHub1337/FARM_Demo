@@ -1,4 +1,3 @@
-
 export const ENDPOINTS = {
     CREATE_USER: () => (
         "/auth/create-user"        
