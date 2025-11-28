@@ -80,7 +80,7 @@ export default function OTPInputs() {
 
       if (response.status === 201) {
         await sleep(100);
-        navigator("/dashboard", {state: {allowed: true}});
+        navigator("/submit-bio", { state: { allowed: true } });
       } else if (response.status === 406) {
         setInvalidOtp(true);
       }

@@ -1,28 +1,34 @@
+from contextlib import asynccontextmanager
 from pymongo import AsyncMongoClient
 from pymongo.asynchronous.database import AsyncDatabase
 from pymongo.server_api import ServerApi
 from typing import Annotated
-from fastapi import Depends
+from fastapi import Depends, FastAPI, Request
 
 from src import settings
 
-async def collection_creator(db: AsyncDatabase):
-    existing = await db.list_collection_names()
-    if "users" not in existing:
-        await db.create_collection("users")
 
-async def get_db():
-    URI = settings.PYMONGO_URI
-    DB_NAME = settings.PYMONGO_DB
-    client = AsyncMongoClient(URI, server_api=ServerApi("1"))
-    db = client[DB_NAME]
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Create global Mongo client once
+    client = AsyncMongoClient(settings.PYMONGO_URI)
+    db = client[settings.PYMONGO_DB]
 
-    # Initialize collections
-    await collection_creator(db)
+    app.state.client = client
+    app.state.db = db
 
-    try:
-        yield db
-    finally:
-        await client.close()
+    print("DB Connected")
+    yield
+    await client.close()
+    print("DB Closed")
+
+
+# async def collection_creator(db: AsyncDatabase):
+#     existing = await db.list_collection_names()
+#     if "users" not in existing:
+#         await db.create_collection("users")
+
+async def get_db(request: Request):
+    return request.app.state.db
 
 db_dependency = Annotated[AsyncDatabase, Depends(get_db)]

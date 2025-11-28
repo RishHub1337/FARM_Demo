@@ -26,9 +26,23 @@ class Authentication:
 
     @staticmethod
     @router.post("/create-user", response_model=CreateUserResponse)
-    async def create_user(data: UserAccount, db: db_dependency, redis_client: Redis = Depends(get_redis_client)):
+    async def create_user(response: Response, data: UserAccount, db: db_dependency, redis_client: Redis = Depends(get_redis_client)):
         new_user = await Authentication.user_service.create_user_account(data=data, db=db, redis_client=redis_client)
         new_user = await Authentication.user_service.get_user_by_id(new_user.inserted_id, db)
+        new_user = UserAccount(**new_user)
+        if new_user:
+            access_token = Authentication.util.create_access_token(
+                {"username": new_user.username},
+                expires_delta=timedelta(minutes=settings.TOKEN_EXPIRY_TIME),
+            )
+            response.set_cookie(
+                "access_token",
+                access_token,
+                httponly=True,
+                secure=True,
+                samesite="lax",
+                max_age=settings.TOKEN_EXPIRY_TIME * 60,
+            )
         return new_user
 
     @staticmethod
@@ -41,7 +55,7 @@ class Authentication:
     async def verify_user(
         data: OtpVerificationModel, db: db_dependency, redis_client: Redis = Depends(get_redis_client)
     ):
-        verified = await Authentication.user_service.verify_otp(data, redis_client)
+        verified = await Authentication.user_service.verify_otp(data, redis_client, db)
         if verified is False:
             raise HTTPException(status.HTTP_406_NOT_ACCEPTABLE, "Invalid OTP")
         await Authentication.user_service.update_user_verification_status(data.email, db)
@@ -71,7 +85,7 @@ class Authentication:
     @staticmethod
     @router.get("/logout")
     async def revoke_token(request: Request, response: Response, redis_client: Redis = Depends(get_redis_client)):
-        access_token = request.cookies.get("access_token")
+        access_token = request.cookies.get("access_token", "")
         if not access_token:
             pass
         else:

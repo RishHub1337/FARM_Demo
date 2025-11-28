@@ -23,6 +23,8 @@ class UserAccount(UserAuthBase):
     email: EmailStr
     is_verified: bool = Field(default=False)
     created_at: Optional[datetime] = Field(default_factory=datetime.now)
+    unique_id: Optional[str] = Field(default=None)
+    bio: Optional[str] = Field(default=None)
 
 
 class UserLogin(UserAuthBase):

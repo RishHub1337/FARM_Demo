@@ -14,6 +14,16 @@ class ApiManager {
       },
       withCredentials: true,
     });
+
+    this.api.interceptors.response.use(
+      (response) => response,
+      (error) => {
+        if (error.response?.status === 401) {
+          window.location.href = "/sign-in";
+        }
+        return Promise.reject(error);
+      }
+    );
   }
 
   async createAccount(username, password, firstName, lastName, email) {
@@ -71,6 +81,61 @@ class ApiManager {
     };
     try {
       const res = await this.api.post(ENDPOINTS.VERIFY_USER(), data);
+      return res;
+    } catch (err) {
+      return err.response;
+    }
+  }
+  async get_user() {
+    try {
+      const res = await this.api.get(ENDPOINTS.GET_USER_INFO());
+      return res;
+    } catch (err) {
+      return err.response;
+    }
+  }
+  async update_name(first_name, last_name) {
+    const data = {
+      first_name,
+      last_name,
+    };
+    try {
+      const res = await this.api.post(ENDPOINTS.UPDATE_USER_NAME(), data);
+      return res;
+    } catch (err) {
+      return err.response;
+    }
+  }
+  async update_password(current_password, new_password) {
+    const data = {
+      current_password: current_password,
+      new_password: new_password,
+      confirm_new_password: new_password,
+    };
+    try {
+      const res = await this.api.post(ENDPOINTS.UPDATE_PASSWORD(), data);
+      return res;
+    } catch (err) {
+      return err.response;
+    }
+  }
+  async update_bio(bio) {
+    const data = {
+      bio: bio,
+    };
+    try {
+      const res = await this.api.post(ENDPOINTS.UPDATE_BIO(), data);
+      return res;
+    } catch (err) {
+      return err.response;
+    }
+  }
+  async get_unique_id_and_bio(last_unique_id) {
+    const data = {
+      last_unique_id: last_unique_id,
+    };
+    try {
+      const res = await this.api.post(ENDPOINTS.GET_UNIQUE_ID_AND_BIO(), data);
       return res;
     } catch (err) {
       return err.response;

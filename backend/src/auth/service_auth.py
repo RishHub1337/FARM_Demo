@@ -122,8 +122,8 @@ class UserServices:
             print(e)
             raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Internal server error")
 
-    async def verify_otp(self, data: OtpVerificationModel, redis_client: Redis):
-        otp_verification = await self.util.verify_otp_for_email_verification(data.email, data.otp, redis_client)
+    async def verify_otp(self, data: OtpVerificationModel, redis_client: Redis, db: db_dependency):
+        otp_verification = await self.util.verify_otp_for_email_verification(data.email, data.otp, redis_client, db)
         if otp_verification is False:
             return False
         return True

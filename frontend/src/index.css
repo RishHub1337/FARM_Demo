@@ -131,3 +131,15 @@ body {
     @apply bg-background text-foreground;
   }
 }
+
+
+@layer utilities {
+  .scroll-fade {
+    -webkit-mask-image: linear-gradient(to bottom,
+        black 97%,
+        transparent);
+    mask-image: linear-gradient(to bottom,
+        black 97%,
+        transparent);
+  }
+}

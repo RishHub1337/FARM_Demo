@@ -1,5 +1,6 @@
 # from passlib.context import CryptContext
 import os
+import random
 import bcrypt
 from datetime import datetime, timezone, timedelta
 
@@ -9,6 +10,7 @@ from redis.asyncio import Redis
 from src import settings
 from jose import JWTError, jwt
 from pymongo.asynchronous.collection import AsyncCollection
+import string
 
 from src.auth.models_auth import UserAccount, UserLogin
 from src.redis.redis import get_redis_client
@@ -26,9 +28,33 @@ class AuthUtils:
         - Password Verification
         - JWT Generation
         - JWT Verification
+        - User Verification
     """
 
     oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
+
+    @staticmethod
+    def generate_unique_id():
+        english_alphabet_list = list(string.ascii_uppercase)
+        numbers_list = list(range(1, 10))
+        uniqueId = ""
+        for _ in range(6):
+            if _ < 3:
+                uniqueId += random.choice(english_alphabet_list)
+            else:
+                uniqueId += random.choice(str(random.choice(numbers_list)))
+        return uniqueId
+
+    @staticmethod
+    async def check_unique_id_in_db(db: db_dependency, unique_id: str) -> bool:
+        """
+        Returns False if no user with unique_id supplied exists in the db, True if any user with supplied unique_id already exists in the db.
+        """
+        users_collection: AsyncCollection = db["users"]
+        user_with_unique_id = await users_collection.find_one(filter={"unique_id": unique_id})
+        if user_with_unique_id:
+            return True
+        return False
 
     @staticmethod
     async def get_user_by_email(email: str, db: db_dependency):
@@ -74,7 +100,7 @@ class AuthUtils:
 
         if not token:
             raise HTTPException(
-                status.HTTP_401_UNAUTHORIZED, detail="No token found", headers={"WWW-Authenticate": "Bearer"}
+                status.HTTP_401_UNAUTHORIZED, detail="Unauthorised", headers={"WWW-Authenticate": "Bearer"}
             )
         try:
             payload = jwt.decode(token, settings.SECRET)
@@ -105,9 +131,21 @@ class AuthUtils:
             print(e)
             return False
 
-    async def verify_otp_for_email_verification(self, email: str, otp: int, redis_client: Redis) -> bool:
+    async def asign_unique_id(self, email: str, db: db_dependency):
+        """Responsible for assigning unique_id to the user."""
+        user_collection = db['users']
+        unique_id = self.generate_unique_id()
+        unique_id_check = await self.check_unique_id_in_db(db, unique_id) 
+        while unique_id_check:
+            unique_id = self.generate_unique_id()
+            unique_id_check = await self.check_unique_id_in_db(db, unique_id)
+        await user_collection.update_one({"email": email}, {"$set": {"unique_id": unique_id}})
+        
+
+    async def verify_otp_for_email_verification(self, email: str, otp: int, redis_client: Redis, db: db_dependency) -> bool:
         otp_check = await verify_otp(email, otp, redis_client)
         if not otp_check:
             return False
         await remove_otp(email, redis_client)
+        await self.asign_unique_id(email, db)
         return True
