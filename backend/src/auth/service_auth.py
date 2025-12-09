@@ -71,7 +71,7 @@ class UserServices:
         """
         users_collection: AsyncCollection = db["users"]
 
-        user_by_username = await users_collection.find_one({"username": username.lower()})
+        user_by_username: UserAccount = await users_collection.find_one({"username": username.lower()})
         if user_by_username is not None:
             return user_by_username
         elif usage_by_create_account:

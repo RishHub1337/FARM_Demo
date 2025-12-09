@@ -7,6 +7,7 @@ from src.database.utils_database import lifespan
 
 from src.routes.auth_route import router as auth_router
 from src.routes.user_route import router as user_router
+from src.routes.websocket_route import router as websocket_router
 
 from src.middleware.autoRefresh_middleware import AutoRefreshSessionMiddleWare
 from src.middleware.enforce_auth_middleware import EnforceAuthMiddleware
@@ -27,12 +28,13 @@ util = AuthUtils()
 app = FastAPI(title="Crawler backend", lifespan=lifespan)
 app.include_router(auth_router)
 app.include_router(user_router)
+app.include_router(websocket_router)
 app.add_middleware(EnforceAuthMiddleware, redis_client=redis_client)
 app.add_middleware(AutoRefreshSessionMiddleWare)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
+    allow_origins=["http://localhost:5173/", "http://localhost:5173"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

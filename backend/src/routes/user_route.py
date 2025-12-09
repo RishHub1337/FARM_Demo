@@ -5,12 +5,20 @@ from ..database.utils_database import db_dependency
 from ..auth.utils_auth import AuthUtils
 from ..auth.models_auth import UserAccount
 
-from ..user.models_user import UpdateBio, UpdateNameRequest, UpdatePasswordRequest, GetUsersListResponse, GetUsersListRequest
+from ..user.models_user import (
+    UpdateBio,
+    UpdateNameRequest,
+    UpdatePasswordRequest,
+    GetUsersListResponse,
+    GetUsersListRequest,
+)
 from ..user.service_user import UserService
 from ..user.models_user import GetUserResponse
+from ..websocket.manager import manager
 
 router = APIRouter(prefix="/user", tags=["User"])
 auth_util = AuthUtils()
+# manager = ConnectionManager()
 
 
 class UserRoutes:
@@ -19,7 +27,12 @@ class UserRoutes:
 
     @staticmethod
     @router.post("/update/{key}", status_code=status.HTTP_200_OK)
-    async def update(key: str, db: db_dependency, data: UpdateNameRequest | UpdatePasswordRequest, user=Depends(auth_util.get_current_user)):
+    async def update(
+        key: str,
+        db: db_dependency,
+        data: UpdateNameRequest | UpdatePasswordRequest,
+        user=Depends(auth_util.get_current_user),
+    ):
         if key == "fullName":
             try:
                 username: str = user.username
@@ -33,7 +46,7 @@ class UserRoutes:
     @router.get("/get-user", response_model=GetUserResponse)
     async def get_user(user: UserAccount = Depends(auth_util.get_current_user)):
         return user.model_dump()
-    
+
     @staticmethod
     @router.post("/update-bio")
     async def update_bio(data: UpdateBio, db: db_dependency, user: UserAccount = Depends(auth_util.get_current_user)):
@@ -41,5 +54,14 @@ class UserRoutes:
 
     @staticmethod
     @router.post("/get-users-for-home")
-    async def get_users_for_home_page(data: GetUsersListRequest, db: db_dependency, user: UserAccount = Depends(auth_util.get_current_user)):
+    async def get_users_for_home_page(
+        data: GetUsersListRequest, db: db_dependency, user: UserAccount = Depends(auth_util.get_current_user)
+    ):
         return await UserRoutes.user_service.get_unique_id_and_bio(db, user, data)
+
+    @staticmethod
+    @router.get("/send/{unique_id}")
+    async def send_test(unique_id: str, user: UserAccount = Depends(auth_util.get_current_user)):
+        print(">>> Triggering send to:", unique_id)
+        await manager.send_to_user(unique_id, {"msg": "connection request", "from": user.unique_id})
+        return {"status": "sent"}

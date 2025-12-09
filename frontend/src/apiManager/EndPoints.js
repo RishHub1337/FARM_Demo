@@ -32,5 +32,8 @@ export const ENDPOINTS = {
     ),
     GET_UNIQUE_ID_AND_BIO: () => (
         "/user/get-users-for-home"
+    ),
+    SEND_NOTIFICATION: (uniqueId) => (
+        `/user/send/${uniqueId}`
     )
 }

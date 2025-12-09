@@ -5,7 +5,7 @@ import ApiManager from "../../apiManager/ApiManager.js";
 import { useNavigate } from "react-router-dom";
 // import { build } from "vite";
 
-const InputWrapper = forwardRef(({ value, setValue, ref }) => {
+const InputWrapper = forwardRef(({ value, setValue }, ref) => {
   return (
     <div className="flex flex-col gap-1 text-2xl">
       <input
@@ -13,8 +13,7 @@ const InputWrapper = forwardRef(({ value, setValue, ref }) => {
         onChange={(e) => setValue(e.target.value)}
         value={value}
         autoComplete="off"
-        // placeholder="Email"
-        className="border !p-3  h-10 w-[20rem] text-[1rem] font-extralight rounded-none focus:outline-none focus:ring-0 text-white"
+        className="border !p-3 h-10 w-[20rem] text-[1rem] font-extralight rounded-none focus:outline-none focus:ring-0 text-white"
       />
     </div>
   );

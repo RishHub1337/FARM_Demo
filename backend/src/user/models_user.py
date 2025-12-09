@@ -1,4 +1,6 @@
+from datetime import datetime
 from typing import Optional
+import uuid
 from pydantic import BaseModel, Field
 
 class UpdateNameRequest(BaseModel):
@@ -10,7 +12,7 @@ class UpdatePasswordRequest(BaseModel):
     new_password: str
 
 class UpdateBio(BaseModel):
-    bio: str = Field(..., min_length=3, max_length=36)
+    bio: str = Field(..., min_length=3, max_length=225)
 
 class GetUsersListRequest(BaseModel):
     last_unique_id: Optional[str]

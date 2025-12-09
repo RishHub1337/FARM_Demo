@@ -1,11 +1,41 @@
 import React, { useState, useEffect, useRef } from "react";
 import ApiManager from "../../../apiManager/ApiManager.js";
 import Loader from "../../../components/styleComponent/Loader.jsx";
+import useNotification from "../../../apiManager/useNotifications.js";
+import Cookies from "js-cookie";
 
-/* =======================
-   Member Card Component
-======================= */
+const apiManager = new ApiManager();
+
+function getCookie(name) {
+  const match = document.cookie.match(new RegExp("(^| )" + name + "=([^;]+)"));
+  if (match) return match[2];
+  return null;
+}
+
 const MembersDiv = ({ uniqueId, bio }) => {
+  const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+  const [clickedConnect, setClickedConnect] = useState(false);
+
+  const handleConnectClick = async () => {
+    console.log(uniqueId, bio);
+    setClickedConnect(true);
+
+    try {
+      const response = await apiManager.send_notification(uniqueId);
+
+      if (response?.status === 200) {
+        alert(`Notification sent successfully to: ${uniqueId}`);
+      } else {
+        alert(`Something is wrong with sending notification to: ${uniqueId}`);
+      }
+    } catch (err) {
+      alert(`Error while sending notification: ${err.message}`);
+    }
+
+    await sleep(1000);
+    setClickedConnect(false);
+  };
+  // ✅
   return (
     <div className="h-24 !mx-4 !px-4 !py-2 border-2 border-green-800 flex justify-between items-center">
       <div className="min-w-0">
@@ -24,27 +54,42 @@ const MembersDiv = ({ uniqueId, bio }) => {
       </div>
 
       <div className="flex justify-center items-center h-full min-w-24 text-6xl">
-        <button className="cursor-pointer">💬</button>
+        <button
+          onClick={handleConnectClick}
+          className="cursor-pointer  active:translate-y-[2px] active:scale-99"
+        >
+          {clickedConnect ? (
+            <div className="blur-[1px]">✔️</div>
+          ) : (
+            <div className="blur-[1px]">💬</div>
+          )}
+        </button>
       </div>
     </div>
   );
 };
 
-/* =======================
-   Home Component
-======================= */
 const Home = () => {
   const [lastUniqueId, setLastUniqueId] = useState(null);
   const [uniqueIdBioList, setUniqueIdBioList] = useState([]);
   const [hasMore, setHasMore] = useState(true);
   const [loading, setLoading] = useState(false);
+  
+  const messages = useNotification();
+  useEffect(() => {
+    if (!messages || !messages.length) return;
+
+    const latest = messages[messages.length - 1];
+
+    alert(`Got message from: ${latest.from}`);
+  }, [messages]);
 
   const get_unique_id_and_bio = async () => {
     if (loading || !hasMore) return;
 
     setLoading(true);
     try {
-      const apiManager = new ApiManager();
+      // const apiManager = new ApiManager();
       const response = await apiManager.get_unique_id_and_bio(lastUniqueId);
 
       if (response.status === 200) {

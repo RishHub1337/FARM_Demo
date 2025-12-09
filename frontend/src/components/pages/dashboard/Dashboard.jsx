@@ -140,7 +140,7 @@ const Dashboard = () => {
                   >
                     Notification
                   </button>
-                  <button
+                  {/* <button
                     draggable="false"
                     to={"#"}
                     onClick={() => handlePortionSelection("staff")}
@@ -155,7 +155,7 @@ const Dashboard = () => {
                     className="hover:bg-[#f2f2f2] !px-8 !py-4 !m-2  flex items-center transition-colors duration-300 ease-in-out"
                   >
                     Make Payment
-                  </button>
+                  </button> */}
                 </div>
                 <div>
                   <nav className="h-full flex flex-col">

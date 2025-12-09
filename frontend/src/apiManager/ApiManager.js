@@ -141,6 +141,14 @@ class ApiManager {
       return err.response;
     }
   }
+  async send_notification(uniqueId) {
+    try {
+      const res = await this.api.get(ENDPOINTS.SEND_NOTIFICATION(uniqueId));
+      return res
+    } catch (err) {
+      return err.response;
+    }
+  }
 }
 
 export default ApiManager;

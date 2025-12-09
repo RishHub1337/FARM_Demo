@@ -4,7 +4,7 @@ import Toast from "../styleComponent/Toast";
 const DummyTest = () => {
   const [showToast, setShowToast] = useState(false);
 
-  const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+  
 
   useEffect(() => {
     console.log("Toast state:", showToast);

@@ -11,6 +11,7 @@ PUBLIC_ROUTES = {
     "/auth/verify-user",
     "/auth/login",
     "/auth/logout",
+    "/user/update-bio",
     "/docs",
     "/openapi.json",
 }

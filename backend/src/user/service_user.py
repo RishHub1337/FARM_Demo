@@ -1,3 +1,5 @@
+import json
+from pprint import pprint
 from fastapi import Depends, HTTPException, status
 
 from ..database.utils_database import db_dependency
@@ -12,7 +14,10 @@ from .models_user import (
 from pymongo.asynchronous.collection import AsyncCollection
 from ..auth.utils_auth import AuthUtils
 
+from ..websocket.manager_websocket import ConnectionManager
 from ..auth.models_auth import UserAccount
+from ..redis.redis import redis_client
+import os
 
 auth_util = AuthUtils()
 
@@ -28,9 +33,11 @@ class UserService:
 
         try:
             await user_collection.update_one({"username": username}, {"$set": {"bio": data.bio}})
+            return {"status": "success", "bio": data.bio}
         except Exception as e:
             print(e)
             raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="internal server error")
+
 
     async def update_name(self, data: UpdateNameRequest, db: db_dependency, username: str):
         first_name, last_name = (data.first_name, data.last_name)
@@ -74,7 +81,14 @@ class UserService:
             cursor = user_collection.find(query).sort("unique_id", 1).limit(page_size)
             users = await cursor.to_list(length=page_size)
 
-            users_list = [GetUsersListResponse(unique_id=_user["unique_id"], bio=_user["bio"]) for _user in users]
+            final_users = []
+            for db_user in users:
+                print(db_user)
+                if db_user.get("username", "").casefold() == user.username.casefold():
+                    continue
+                final_users.append(db_user)
+
+            users_list = [GetUsersListResponse(unique_id=_user["unique_id"], bio=_user["bio"]) for _user in final_users]
 
             last_unique_id = users[-1]["unique_id"] if users else None
 
@@ -85,3 +99,5 @@ class UserService:
         except Exception as e:
             print(e)
             raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="internal server error")
+        
+    
